@@ -11,9 +11,9 @@
 #define XPRS_TRAY_EXIT		104
 #define XPRS_TRAY_EVENT		(WM_USER + 1)
 
-#define XPRS_CLASS_NAME "XPRowSelect"
-#define XPRS_VERSION	"XPRowSelect v1.0"
-#define LV_CLASS_NAME	"SysListView32"
+#define XPRS_CLASS_NAME 	"XPRowSelect"
+#define XPRS_VERSION		"XPRowSelect v1.0"
+#define LV_CLASS_NAME		"SysListView32"
 
 HMENU g_menu = 0;
 
