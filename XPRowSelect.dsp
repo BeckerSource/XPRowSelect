@@ -106,6 +106,10 @@ SOURCE=.\icon1.ico
 # End Source File
 # Begin Source File
 
+SOURCE=.\icon2.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\XPRowSelect.rc
 # End Source File
 # End Group
