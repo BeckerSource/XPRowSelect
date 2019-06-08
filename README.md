@@ -1,7 +1,7 @@
 # XPRowSelect
 ## Windows XP Explorer Full Row Select
 
-This program runs in the background with a visible tray icon and hooks into Windows Explorer to allow for full-row selection of Explorer items while in Details/Report view-mode.
+This program runs in the background with a visible tray icon and hooks into Windows Explorer to allow for full-row selection of Explorer items while in Details/Report view-mode.  Click anywhere on the item row to select.
 
 * Developed under Windows XP 32-bit Service Pack 3.  Untested on anything else.
 * Win32 API only (no .NET).
