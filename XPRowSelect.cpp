@@ -3,7 +3,7 @@ No license and no support.
 Use this code/program at your own risk.
 
 v1.1:
-> added support for /h argument to hide tray icon
+> added support for /H argument to hide tray icon
 > new 16x16 icon for tray that looks better
 
 v1.0:
@@ -25,6 +25,7 @@ v1.0:
 
 #define XPRS_CLASS_NAME     "XPRowSelect"
 #define XPRS_VERSION        "XPRowSelect v1.1"
+#define XPRS_INFO           "(use '/H' arg to hide tray icon)"
 #define LV_CLASS_NAME       "SysListView32"
 
 HMENU g_menu = 0;
@@ -43,6 +44,7 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
         case WM_CREATE:
             g_menu = CreatePopupMenu();
             AppendMenu(g_menu, MF_DISABLED, XPRS_TRAY_VERSION, XPRS_VERSION);
+            AppendMenu(g_menu, MF_DISABLED, XPRS_TRAY_VERSION, XPRS_INFO);
             AppendMenu(g_menu, MF_SEPARATOR, XPRS_TRAY_SEP, 0);
             AppendMenu(g_menu, MF_STRING, XPRS_TRAY_EXIT, "Exit");
         default:
@@ -110,7 +112,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     if (hWnd){
         NOTIFYICONDATA *nid = 0;
         // create / show tray icon...
-        if (!(pCmdLine && strlen(pCmdLine) && strstr(pCmdLine, "/h"))){
+        if (!(pCmdLine && strlen(pCmdLine) && (strstr(pCmdLine, "/h") || strstr(pCmdLine, "/H")))){
             nid = (NOTIFYICONDATA *) calloc(1, sizeof(NOTIFYICONDATA));
             nid->cbSize = sizeof(NOTIFYICONDATA);
             nid->hWnd = hWnd;
