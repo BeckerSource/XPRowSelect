@@ -2,6 +2,10 @@
 No license and no support.
 Use this code/program at your own risk.
 
+v1.2:
+> hover over tooltip for version/info (instead of in menu)
+> minor code cleanup
+
 v1.1:
 > added support for /H argument to hide tray icon
 > new 16x16 icon for tray that looks better
@@ -10,7 +14,7 @@ v1.0:
 > initial release
 ****************************************************/
 
-#define WINVER 0x0500 // for SetWinEventHook stuff
+#define  WINVER             0x0500  // for SetWinEventHook stuff
 
 #include <windows.h>
 #include <CommCtrl.h>
@@ -24,8 +28,8 @@ v1.0:
 #define XPRS_TRAY_EVENT     (WM_USER + 1)
 
 #define XPRS_CLASS_NAME     "XPRowSelect"
-#define XPRS_VERSION        "XPRowSelect v1.1"
-#define XPRS_INFO           "(use '/H' arg to hide tray icon)"
+#define XPRS_TTIP_VERSION   "XPRowSelect v1.2"
+#define XPRS_TTIP_INFO      "(use '/H' arg to hide tray icon)"
 #define LV_CLASS_NAME       "SysListView32"
 
 HMENU g_menu = 0;
@@ -43,9 +47,9 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
             return 0;
         case WM_CREATE:
             g_menu = CreatePopupMenu();
-            AppendMenu(g_menu, MF_DISABLED, XPRS_TRAY_VERSION, XPRS_VERSION);
-            AppendMenu(g_menu, MF_DISABLED, XPRS_TRAY_VERSION, XPRS_INFO);
-            AppendMenu(g_menu, MF_SEPARATOR, XPRS_TRAY_SEP, 0);
+            //AppendMenu(g_menu, MF_DISABLED, XPRS_TRAY_VERSION, XPRS_TTIP_VERSION);
+            //AppendMenu(g_menu, MF_DISABLED, XPRS_TRAY_VERSION, XPRS_TTIP_INFO);
+            //AppendMenu(g_menu, MF_SEPARATOR, XPRS_TRAY_SEP, 0);
             AppendMenu(g_menu, MF_STRING, XPRS_TRAY_EXIT, "Exit");
         default:
             return DefWindowProc(hWnd, uMsg, wParam, lParam);
@@ -97,17 +101,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     wc.lpszClassName =      XPRS_CLASS_NAME;
     unsigned short res =    RegisterClass(&wc);
 
-    HWND hWnd = CreateWindowEx(
-        0,                      // extra styles
-        XPRS_CLASS_NAME,        // window class
+    HWND hWnd = CreateWindow(
+        XPRS_CLASS_NAME,        // class name
         XPRS_CLASS_NAME,        // title text
         WS_OVERLAPPEDWINDOW,    // visible style
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, // size and pos
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, // x, y, width, height
         0,                    // parent   
         0,                    // menu
         hInstance,            // instance handle
-        0                     // extra data
-        );
+        0                     // lParam / extra data
+    );
 
     if (hWnd){
         NOTIFYICONDATA *nid = 0;
@@ -117,10 +120,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
             nid->cbSize = sizeof(NOTIFYICONDATA);
             nid->hWnd = hWnd;
             nid->uID = XPRS_TRAY_NID_UID;
+            nid->uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
             nid->uCallbackMessage = XPRS_TRAY_EVENT;
             nid->hIcon = LoadIcon(GetModuleHandle(0), MAKEINTRESOURCE(IDI_ICON1));
-            nid->uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP;
-            LoadString(GetModuleHandle(0), XPRS_TRAY_TITLE, nid->szTip, 128);
+            strcpy(nid->szTip, XPRS_TTIP_VERSION);
+            strcat(nid->szTip, "\n");
+            strcat(nid->szTip, XPRS_TTIP_INFO);
             Shell_NotifyIcon(NIM_ADD, nid);    
         }
 
