@@ -7,7 +7,8 @@ This program runs in the background with an optional visible tray icon and hooks
 * Win32 API only (no .NET).
 * Visual Studio 6 / VC98 project included.  All code in a single CPP file.  Release executable is ~40k.
 * Upon program launch, existing Explorer windows using Details/Report view will be adjusted for row selection.
-* Right-click tray icon to view the program version and/or exit.
+* Mouse-hover on tray icon to view version/info.
+* Right-click tray icon to exit.
 * Run program with "/H" argument to hide the tray icon.
 * See main .cpp file for release notes.
 
