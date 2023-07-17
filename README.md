@@ -15,4 +15,4 @@ Other Stuff:
 * See main .cpp file for release notes.
   
 ___NOTE1: Explorer windows _MUST_ be set to use "Details" viewing mode in order for full rows to be selected___ \
-___NOTE2: Explorer Folder View option "Full Path in Title Bar" must be enabled for CTRL+N feature to work___ \
+___NOTE2: Explorer Folder View option "Full Path in Title Bar" must be enabled for CTRL+N feature to work___
