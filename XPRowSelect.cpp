@@ -2,6 +2,10 @@
 No license and no support.
 Use this code/program at your own risk.
 
+v1.3:
+> add global keyboard hook to open new explorer windows with CTRL+N at current location
+> NOTE: requires full paths in title bars (windows folder view setting)
+
 v1.2:
 > hover over tooltip for version/info (instead of in menu)
 > minor code cleanup
@@ -14,11 +18,13 @@ v1.0:
 > initial release
 ****************************************************/
 
-#define  WINVER             0x0500  // for SetWinEventHook stuff
+#define  WINVER             0x0500 // for SetWinEventHook
+#define  _WIN32_WINNT       0x0400 // for SetWindowsHookEx
 
 #include <windows.h>
 #include <CommCtrl.h>
 #include "resource.h"
+#include "Shlwapi.h"
 
 #define XPRS_TRAY_NID_UID   100
 #define XPRS_TRAY_TITLE     101
@@ -28,13 +34,62 @@ v1.0:
 #define XPRS_TRAY_EVENT     (WM_USER + 1)
 
 #define XPRS_CLASS_NAME     "XPRowSelect"
-#define XPRS_TTIP_VERSION   "XPRowSelect v1.2"
+#define XPRS_TTIP_VERSION   "XPRowSelect v1.3"
 #define XPRS_TTIP_INFO      "(use '/H' arg to hide tray icon)"
 #define LV_CLASS_NAME       "SysListView32"
+#define EXP_CLASS_NAME1     "CabinetWClass"
+#define EXP_CLASS_NAME2     "ExploreWClass"
+#define DESKTOP_CLASS_NAME  "Progman"
+#define MY_COMPUTER_TITLE   "My Computer"
+#define EXPLORER_PATH       "C:\\windows\\explorer.exe"
+#define EXPLORER_ARGS       "/n,"
+#define VK_N                0x4E
 
 HMENU g_menu = 0;
+bool keys_down = false;
 
-LRESULT CALLBACK WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
+LRESULT CALLBACK HookProc(int code, WPARAM wParam, LPARAM lParam){
+    if (code == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_KEYUP)){
+        LPKBDLLHOOKSTRUCT data = (LPKBDLLHOOKSTRUCT) lParam;
+
+        // check pressed...
+        if (wParam == WM_KEYDOWN && !keys_down &&
+            data->vkCode == VK_N && GetAsyncKeyState(VK_CONTROL) < 0){
+            HWND hwnd = GetForegroundWindow();
+            if (hwnd != NULL){
+                char class_name[32];
+                GetClassName(hwnd, class_name, 32);
+
+                bool is_explorer = strcmp(class_name, EXP_CLASS_NAME1) == 0 || strcmp(class_name, EXP_CLASS_NAME2) == 0;
+                bool is_desktop = !is_explorer && strcmp(class_name, DESKTOP_CLASS_NAME) == 0;
+
+                if (is_explorer || is_desktop){
+                    keys_down = true;
+
+                    char win_title[192];
+                    win_title[0] = '\0';
+                    if (is_explorer){
+                        GetWindowText(hwnd, win_title, 192);
+                        // don't allow invalid paths like "My Computer"...
+                        if (!PathFileExists(win_title))
+                            win_title[0] = '\0';
+                    }
+
+                    char args[256];
+                    strcpy(args, EXPLORER_ARGS);
+                    strcat(args, win_title);
+                    ShellExecute(0, "open", EXPLORER_PATH, args, NULL, SW_NORMAL);
+                }
+            }
+        // check released...
+        } else if (wParam == WM_KEYUP && keys_down && data->vkCode == VK_N){
+            keys_down = false;
+        }
+    }
+    return CallNextHookEx(NULL, code, wParam, lParam);
+}
+
+LRESULT CALLBACK WinProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
     switch (uMsg){
         case XPRS_TRAY_EVENT:
             if (lParam == WM_RBUTTONUP){
@@ -90,13 +145,12 @@ BOOL CALLBACK EnumChildProc(HWND hWnd, LPARAM lParam){
 }
 
 void CALLBACK WinEventProc(HWINEVENTHOOK hWinEventHook, DWORD dwEvent, HWND hWnd, LONG idObject, LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime){
-    //if (dwEvent == EVENT_OBJECT_CREATE)
-        UpdateRowSelectStyle(hWnd);
+    UpdateRowSelectStyle(hWnd);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine, int nCmdShow){
     WNDCLASS wc = {0};
-    wc.lpfnWndProc =        WindowProc;
+    wc.lpfnWndProc =        WinProc;
     wc.hInstance =          hInstance;
     wc.lpszClassName =      XPRS_CLASS_NAME;
     unsigned short res =    RegisterClass(&wc);
@@ -106,7 +160,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
         XPRS_CLASS_NAME,        // title text
         WS_OVERLAPPEDWINDOW,    // visible style
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, // x, y, width, height
-        0,                    // parent   
+        0,                    // parent
         0,                    // menu
         hInstance,            // instance handle
         0                     // lParam / extra data
@@ -126,18 +180,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
             strcpy(nid->szTip, XPRS_TTIP_VERSION);
             strcat(nid->szTip, "\n");
             strcat(nid->szTip, XPRS_TTIP_INFO);
-            Shell_NotifyIcon(NIM_ADD, nid);    
+            Shell_NotifyIcon(NIM_ADD, nid);
         }
 
         // update existing ListViews shown in Explorer...
         HWND hWndStart = 0;
-        while ((hWndStart = FindWindowEx(0, hWndStart, "CabinetWClass", 0)))
+        while ((hWndStart = FindWindowEx(0, hWndStart, EXP_CLASS_NAME1, 0)))
             EnumChildWindows(0, EnumChildProc, 0);
-        while ((hWndStart = FindWindowEx(0, hWndStart, "ExploreWClass", 0)))
+        while ((hWndStart = FindWindowEx(0, hWndStart, EXP_CLASS_NAME2, 0)))
             EnumChildWindows(0, EnumChildProc, 0);
 
-        // hook to ListView creation events (alter style of each listview after creation)...
+        // hook: ListView creation events (alter style of each listview after creation)...
         SetWinEventHook(EVENT_OBJECT_CREATE, EVENT_OBJECT_CREATE, 0, WinEventProc, 0, 0, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS);
+        // hook: capture global key events...
+        SetWindowsHookEx(WH_KEYBOARD_LL, HookProc, GetModuleHandle(NULL), 0);
 
         // main loop...
         MSG msg = {0};
