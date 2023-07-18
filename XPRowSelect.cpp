@@ -40,7 +40,6 @@ v1.0:
 #define EXP_CLASS_NAME1     "CabinetWClass"
 #define EXP_CLASS_NAME2     "ExploreWClass"
 #define DESKTOP_CLASS_NAME  "Progman"
-#define MY_COMPUTER_TITLE   "My Computer"
 #define EXPLORER_PATH       "C:\\windows\\explorer.exe"
 #define EXPLORER_ARGS       "/n,"
 #define VK_N                0x4E
